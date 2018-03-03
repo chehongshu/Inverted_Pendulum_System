@@ -1,0 +1,162 @@
+#include "timer.h"
+
+
+
+//extern int KEY_MODE;
+//int   t_2ms;
+int  	  Angle;  					 	         //===???¨¨ 
+int      LAST_Angle;
+int    	Angle_PWM; 			     //=== ???¨¨¦Ì?PWM
+int		  Encoder;                  //=== ¡À¨¤???¡Â¦Ì??¦Ì
+int 			Encoder_PWM;		    //=== ¡À¨¤???¡Â??3?¨¤¡ä¦Ì?PWM
+int			PWM_VALUE;         //=== PWM¡Á?o¨®¦Ì??¦Ì
+int 			XIAN_FU=6900;      //=== ?T¡¤¨´
+int 			Encoder_Last;			    //=== ¨¦?¨°?¡ä?¦Ì?¡À¨¤???¡Â¦Ì??¦Ì 
+int		  Speed;									    //===  ?¨´?¨¨
+int      delay_25ms;					  	//=== ?¨®¨º¡À25ms
+int      delay_5ms_0;   		  	//===  ?¨®¨º¡À5ms
+int      delay_5ms_1;           //=== ?¨®¨º¡À5ms  
+int      delay_start;              //===  ??¡ã¨²¦Ì??¨®¨º¡À
+int      QB_FLAG;
+extern int FUNCTION_1;
+extern int FUNCTION_2;
+
+extern int ZHONGZHI;
+int XIA_ZHI = 283  ;
+/******************** TIM5  ?D??    o¡¥¨ºy*************************/
+void TIM5_IRQHandler(void)   
+{
+	if (TIM_GetITStatus(TIM5, TIM_IT_Update) != RESET) //?¨¬2¨¦???¡§¦Ì?TIM?D??¡¤¡é¨¦¨²¨®?¡¤?:TIM ?D???¡ä 
+		{
+					TIM_ClearITPendingBit(TIM5, TIM_IT_Update  );  //??3yTIMx¦Ì??D??¡äy¡ä|¨¤¨ª??:TIM ?D???¡ä 
+					//   ¨¦¡§?¨¨2?¡¤??¡ê
+		                  
+						LAST_Angle = Angle;
+						Angle = Angle_Get();//???¨¨?¨¹D?
+						Encoder = Read_Encoder(4);// ?????¨¹D?
+	
+						
+								if((Angle<195)&&(Angle>165))
+								{
+														  	Angle_PWM =balance(Angle);            //===???¨¨PD????	
+																			delay_25ms++;
+															 if(delay_25ms == 5)
+															 {
+																			Encoder_PWM=Position(Encoder);
+																			delay_25ms = 0;
+															 }
+														 	
+													  	if(PWM_VALUE>XIAN_FU) PWM_VALUE = XIAN_FU;
+															if(PWM_VALUE< -XIAN_FU) PWM_VALUE = -XIAN_FU;
+
+															PWM_VALUE=Angle_PWM-Encoder_PWM;        //===????¦Ì??¨²¡Á???PWM
+															motor_pwm(PWM_VALUE);
+															 
+															if((Angle>=179)&&(Angle<=181))
+															{
+																					motor_stop();
+															}
+				  }
+						 
+					 if(FUNCTION_1 == 0)
+					 {
+										if((Angle>195)||(Angle<165))
+										{
+																motor_stop();
+										}
+				  	}
+					 
+						if(FUNCTION_1 == 1 )
+						{
+							      if((Angle >110 )&&(Angle<250))
+										{
+													if(QB_FLAG == 0)
+													{
+															 TIM4->CNT =10000;	
+															 QB_FLAG = 1;
+													}
+										}else
+										{
+											   QB_FLAG = 1;
+														if(LAST_Angle>Angle)
+														{
+																		motor_Anticlockwise(1800);   
+														}
+														else
+														{
+																		motor_Clockwise(1800);	
+														} 
+										}
+						}
+					
+						
+						
+						
+//					 if(FUNCTION_1 == 1)
+//					 {
+//											 if(delay_start  <15)
+//											 {
+//														 delay_start++;
+//														 motor_Anticlockwise(80);     //¦Ì??¨²¨®¨°¡Áa
+//											 }									 
+//						 
+//											if((Angle>(ZHONGZHI+40))||(Angle<(ZHONGZHI-40)))
+//                      {
+//												
+//															if((Angle<XIA_ZHI)&&(Angle>(ZHONGZHI+40)))
+//															{
+//																				    delay_5ms_0 ++;
+//									
+//																					 motor_Anticlockwise(30);     //¦Ì??¨²¨®¨°¡Áa
+//																				 if(delay_5ms_0 ==35)		{ motor_Clockwise(30);     }						
+//																			 
+//																					if(delay_5ms_0 > 35)
+//																					{
+//																									motor_stop();
+//																								 delay_5ms_1 = 0;
+//																					 }
+//																				 
+//															}
+//															if((((Angle>XIA_ZHI)&&(Angle<360)))||((Angle<(ZHONGZHI-4))&&(Angle>0)))
+//															{
+//																					delay_5ms_1 ++;
+//																					motor_Clockwise(30);	
+//																			 if(delay_5ms_1== 35)		{ motor_Anticlockwise(30);     }													
+//																			 if(delay_5ms_1> 35)
+//																				 {
+//																							motor_stop();
+//																						 delay_5ms_0 = 0;
+//																				 }
+//															}
+////															if((Angle<ZHONGZHI-25)&&(Angle>ZHONGZHI))
+////															{
+////																     QB_FLAG = 1;
+////															}
+////															if(( QB_FLAG )&&(Angle == XIA_ZHI))
+////															{
+////																       	motor_stop();
+////																        QB_FLAG = 0;
+////															}
+//															
+//                               if(Angle == ZHONGZHI)
+//															 {
+//																		QB_FLAG = 1;  
+//															 }												
+//                               if(QB_FLAG == 1)
+//															 {
+//																	    TIM4->CNT =10000;	
+//																			QB_FLAG = 0;  																 
+//															 }																 
+//											}
+//										
+//			     }
+					 
+	
+
+		}
+}
+		
+
+
+
+

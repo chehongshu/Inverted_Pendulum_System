@@ -1,0 +1,51 @@
+#include "motor.h"
+
+void motor_Anticlockwise(float right_duty)   //电机正转，顺时针
+{
+	TIM_SetCompare1(TIM3, right_duty*72);//输入占空比
+	GPIO_ResetBits(GPIOA,GPIO_Pin_3);
+}
+
+void motor_Clockwise(float contray_duty)    //电机反转，逆时针
+{
+	TIM_SetCompare1(TIM3, contray_duty*72);
+	GPIO_SetBits(GPIOA,GPIO_Pin_3);
+}
+
+void motor_pwm(float duty)    
+{
+	if(duty>=0)
+	{
+		GPIO_SetBits(GPIOA,GPIO_Pin_3);//电机反转，逆时针
+		TIM_SetCompare1(TIM3, duty);
+	}
+	else
+  {
+		GPIO_ResetBits(GPIOA,GPIO_Pin_3);//电机正转，顺时针
+		TIM_SetCompare1(TIM3, (0-duty));
+	}
+	
+}
+
+void motor_stop(void)    //电机停止
+{
+	TIM_SetCompare1(TIM3, 0);
+}
+
+
+void Motor_BSP_Init(void)
+{
+	GPIO_InitTypeDef GPIO_InitStructure;
+    
+  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOA, ENABLE);
+    
+	GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_3;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;			 
+	GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_Out_PP;
+	GPIO_Init(GPIOA, &GPIO_InitStructure);
+	
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;
+	GPIO_Init(GPIOB, &GPIO_InitStructure);
+	
+	GPIO_SetBits(GPIOB,GPIO_Pin_1);//继电器初始化拉高
+}
